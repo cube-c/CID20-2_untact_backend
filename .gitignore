@@ -1,5 +1,5 @@
-# Created by https://www.gitignore.io/api/vim,linux,macos,python,django,pycharm,windows,intellij
-# Edit at https://www.gitignore.io/?templates=vim,linux,macos,python,django,pycharm,windows,intellij
+# Created by https://www.gitignore.io/api/vim,linux,macos,python,django,pycharm,windows,intellij,vscode
+# Edit at https://www.gitignore.io/?templates=vim,linux,macos,python,django,pycharm,windows,intellij,vscode
 
 ### Django ###
 *.log
@@ -371,6 +371,14 @@ tags
 # Persistent undo
 [._]*.un~
 
+### vscode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
@@ -397,4 +405,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.gitignore.io/api/vim,linux,macos,python,django,pycharm,windows,intellij
+# End of https://www.gitignore.io/api/vim,linux,macos,python,django,pycharm,windows,intellij,vscode
