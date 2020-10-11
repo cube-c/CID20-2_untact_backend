@@ -1,9 +1,11 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from exhibition.models import UserWithTitle
 from exhibition.models import Position
 from exhibition.models import Exhibit
 
-class UserWithTitleAdmin(admin.ModelAdmin):
+class UserWithTitleAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (('Additional Info', {'fields': ('title',),}),)
     list_display = ('username', 'email', 'first_name', 'last_name', 'title')
 
 class PositionAdmin(admin.ModelAdmin):
