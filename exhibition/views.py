@@ -16,16 +16,18 @@ def auth_func(func):
 @auth_func
 def api_exhibit(request):
     if request.method == 'GET':
-        exhibit_all_list = [exhibit for exhibit in Exhibit.objects.all().values()]
+        exhibit_position_id_list = [exhibit['position_id'] for exhibit in Exhibit.objects.all().values()]
+        exhibit_position_list = [list(Position.objects.filter(position_id=position_id).values())[0] for position_id in exhibit_position_id_list]
+        exhibit_all_list = [{**exhibit, **position} for exhibit, position in zip(Exhibit.objects.all().values(), exhibit_position_list)]
         return JsonResponse(exhibit_all_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
-@auth_func
-def api_position(request, position_id):
-    if request.method == 'GET':
-        position_data = list(Position.objects.filter(position_id=position_id).values('posx', 'posy', 'posz', 'roty'))
-        return JsonResponse(position_data, safe=False)
-    return HttpResponseNotAllowed(['GET'])
+# @auth_func
+# def api_position(request, position_id):
+#     if request.method == 'GET':
+#         position_data = list(Position.objects.filter(position_id=position_id).values('posx', 'posy', 'posz', 'roty'))
+#         return JsonResponse(position_data, safe=False)
+#     return HttpResponseNotAllowed(['GET'])
 
 def api_login(request):
     if request.method == 'POST':
