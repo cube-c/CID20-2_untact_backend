@@ -1,10 +1,8 @@
 import json
-from json import JSONDecodeError
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Exhibit
-from .models import Position
+from .models import Exhibit, Position, UserWithTitle
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -45,8 +43,8 @@ def api_signup(request):
         try:
             username = request.POST.get('username')
             password = request.POST.get('password')
-            user = User.objects.create_user(password=password, username=username)
-        except (KeyError, ValueError, JSONDecodeError, IntegrityError):
+            user = UserWithTitle.objects.create_user(username=username, password=password)
+        except (ValueError, IntegrityError):
             return HttpResponseBadRequest()
         return HttpResponse(status=201)
     return HttpResponseNotAllowed(['POST'])
