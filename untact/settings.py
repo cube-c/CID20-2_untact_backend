@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+AUTH_USER_MODEL = 'exhibition.UserWithTitle'
+
 INSTALLED_APPS = [
     'exhibition.apps.ExhibitionConfig',
     'django.contrib.admin',
