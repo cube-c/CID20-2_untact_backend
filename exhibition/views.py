@@ -30,6 +30,17 @@ def api_login(request):
         return HttpResponse(status=401)
     return HttpResponseNotAllowed(['POST'])
 
+def api_signup(request):
+    if request.method == 'POST':
+        try:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = User.objects.create_user(password=password, username=username)
+        except (KeyError, ValueError, JSONDecodeError, IntegrityError):
+            return HttpResponseBadRequest()
+        return HttpResponse(status=201)
+    return HttpResponseNotAllowed(['POST'])
+
 @ensure_csrf_cookie
 def api_token(request):
     if request.method == 'GET':
