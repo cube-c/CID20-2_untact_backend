@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Exhibit
@@ -13,7 +13,6 @@ def auth_func(func):
         return HttpResponse(status=401)
     return wrapper_function
 
-@auth_func
 def api_exhibit(request):
     if request.method == 'GET':
         exhibit_position_id_list = [exhibit['position_id'] for exhibit in Exhibit.objects.all().values()]
@@ -21,13 +20,6 @@ def api_exhibit(request):
         exhibit_all_list = [{**exhibit, **position} for exhibit, position in zip(Exhibit.objects.all().values(), exhibit_position_list)]
         return JsonResponse(exhibit_all_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
-
-# @auth_func
-# def api_position(request, position_id):
-#     if request.method == 'GET':
-#         position_data = list(Position.objects.filter(position_id=position_id).values('posx', 'posy', 'posz', 'roty'))
-#         return JsonResponse(position_data, safe=False)
-#     return HttpResponseNotAllowed(['GET'])
 
 def api_login(request):
     if request.method == 'POST':
@@ -38,6 +30,13 @@ def api_login(request):
             login(request, user)
             return HttpResponse(status=204)
         return HttpResponse(status=401)
+    return HttpResponseNotAllowed(['POST'])
+
+@auth_func
+def api_logout(request):
+    if request.method == 'POST':
+        logout(request)
+        return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
 
 @ensure_csrf_cookie
