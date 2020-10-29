@@ -5,6 +5,6 @@ from . import views
 urlpatterns = [
     path('token/', views.api_token),
     path('login/', views.api_login),
-    path('exhibit/', views.api_exhibit),
-    # path('position/<position_id>/', views.api_position)
+    path('logout/', views.api_logout),
+    path('exhibit/', views.api_exhibit)
 ]
