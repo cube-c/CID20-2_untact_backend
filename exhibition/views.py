@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
+import datetime
 from .models import Exhibit
 from .models import Position
 from .models import UserActivity
@@ -26,7 +27,17 @@ def api_exhibit(request):
 @auth_func
 def api_userStatus(request):
     if request.method == 'GET':
-        status_list = list(UserActivity.objects.values())
+        status_lastActivityDate = [userActivity['last_activity_date'] for userActivity in UserActivity.objects.all().values()]
+        status_isActivated = []
+        for time in status_lastActivityDate:
+            if datetime.datetime.now(datetime.timezone.utc) - time > datetime.timedelta(seconds = 30):
+                status_isActivated.append({'currLoginStatus' : False})
+            else:
+                status_isActivated.append({'currLoginStatus' : False})
+        status_list = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
+        print(status_lastActivityDate)
+        print(status_isActivated)
+        print(status_list)
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
