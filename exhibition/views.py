@@ -16,10 +16,9 @@ def auth_func(func):
 @auth_func
 def api_exhibit(request):
     if request.method == 'GET':
-        exhibit_position_id_list = [exhibit['position_id'] for exhibit in Exhibit.objects.all().values()]
-        exhibit_position_list = [list(Position.objects.filter(position_id=position_id).values())[0] for position_id in exhibit_position_id_list]
-        exhibit_all_list = [{**exhibit, **position} for exhibit, position in zip(Exhibit.objects.all().values(), exhibit_position_list)]
-        return JsonResponse(exhibit_all_list, safe=False)
+        exhibit_query = Exhibit.objects.filter(position_id__isnull=False).select_related('position')
+        exhibit_list = [exhibit.data() for exhibit in exhibit_query]
+        return JsonResponse(exhibit_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
 # @auth_func
