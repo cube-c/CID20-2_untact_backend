@@ -35,9 +35,6 @@ def api_userStatus(request):
             else:
                 status_isActivated.append({'currLoginStatus' : False})
         status_list = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
-        print(status_lastActivityDate)
-        print(status_isActivated)
-        print(status_list)
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
