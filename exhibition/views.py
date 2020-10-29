@@ -5,6 +5,7 @@ from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResp
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Exhibit
 from .models import Position
+from .models import UserActivity
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -21,6 +22,14 @@ def api_exhibit(request):
         exhibit_all_list = [{**exhibit, **position} for exhibit, position in zip(Exhibit.objects.all().values(), exhibit_position_list)]
         return JsonResponse(exhibit_all_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
+
+@auth_func
+def api_userStatus(request):
+    if request.method == 'GET':
+        status_list = list(UserActivity.objects.values())
+        return JsonResponse(status_list, safe=False)
+    return HttpResponseNotAllowed(['GET'])
+
 
 # @auth_func
 # def api_position(request, position_id):

@@ -27,9 +27,11 @@ class LoginStatusMiddleware(object):
             activity.user = request.user
             activity.last_activity_date = datetime.now()
             activity.last_activity_ip = request.META['REMOTE_ADDR']
+            activity.dnd = False
             activity.save()
             print('activity saved')
             return
+        activity.dnd = False
         activity.last_activity_date = datetime.now()
         activity.last_activity_ip = request.META['REMOTE_ADDR']
         activity.save()
