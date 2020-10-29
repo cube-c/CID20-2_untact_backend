@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
+from datetime import datetime
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=150, blank=True)
@@ -23,3 +25,8 @@ class Exhibit(models.Model):
 
     def __str__(self):
         return self.name
+
+class UserActivity(models.Model):
+    last_activity_ip = models.GenericIPAddressField()
+    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
