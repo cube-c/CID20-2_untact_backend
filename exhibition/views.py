@@ -13,7 +13,6 @@ def auth_func(func):
         return HttpResponse(status=401)
     return wrapper_function
 
-@auth_func
 def api_exhibit(request):
     if request.method == 'GET':
         exhibit_query = Exhibit.objects.filter(position_id__isnull=False).select_related('position')
@@ -21,7 +20,6 @@ def api_exhibit(request):
         return JsonResponse(exhibit_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
-@auth_func
 def api_userStatus(request):
     if request.method == 'GET':
         status_lastActivityDate = [userActivity['last_activity_date'] for userActivity in UserActivity.objects.all().values()]
@@ -46,6 +44,7 @@ def api_userStatus(request):
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
+@auth_func
 def api_dndSwitch(request): #dndswitch 로 Boolean (True / False) 만 들어온다고 가정
     if request.method == 'POST':
         if not request.user.is_authenticated:
@@ -63,6 +62,7 @@ def api_blank(request):
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['GET'])
 
+@auth_func
 def api_getMyInfo(request):
     if request.method == 'GET':
         u = request.user.id
