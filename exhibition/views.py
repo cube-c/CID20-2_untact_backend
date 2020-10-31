@@ -30,8 +30,18 @@ def api_userStatus(request):
             if datetime.datetime.now(datetime.timezone.utc) - time > datetime.timedelta(seconds = 30):
                 status_isActivated.append({'currLoginStatus' : False})
             else:
-                status_isActivated.append({'currLoginStatus' : False})
-        status_list = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
+                status_isActivated.append({'currLoginStatus' : True})
+        status_list_full = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
+        status_list = []
+        for status in status_list_full:
+            tempUser = status['user_id']
+            userTitle = UserWithTitle.objects.get(id=tempUser).title
+            if status['dnd'] == True:
+                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'dnd'})
+            elif status['currLoginStatus'] == True:
+                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'activated'})
+            else:
+                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'inactivated'})
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 

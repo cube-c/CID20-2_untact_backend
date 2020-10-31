@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
+from annoying.fields import AutoOneToOneField
 from datetime import datetime
 
 class UserWithTitle(AbstractUser):
@@ -45,5 +46,13 @@ class Exhibit(models.Model):
 class UserActivity(models.Model):
     last_activity_ip = models.GenericIPAddressField()
     last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = AutoOneToOneField(settings.AUTH_USER_MODEL, primary_key = True, on_delete=models.CASCADE)
     dnd = models.BooleanField(default = False) #Do not distrub
+
+    def date(self):
+        return {
+            'last_activity_ip' : self.last_activity_ip,
+            'last_activity_date' : self.last_activity_date,
+            'user' : self.user,
+            'dnd' : self.dnd,
+        }

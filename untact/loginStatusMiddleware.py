@@ -1,4 +1,4 @@
-from exhibition.models import UserActivity
+from exhibition.models import UserActivity, UserWithTitle
 import datetime
 from django.conf import settings
 import re
@@ -17,6 +17,7 @@ class LoginStatusMiddleware(object):
         if not request.user.is_authenticated:
             return
         activity = None
+        
         try:
             activity = request.user.useractivity
         except:
