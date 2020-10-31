@@ -10,7 +10,7 @@ class PositionAdmin(admin.ModelAdmin):
     list_display = ('position_id', 'posx', 'posy', 'posz', 'roty')
 
 class ExhibitAdmin(admin.ModelAdmin):
-    list_display = ('name', 'summary', 'position')
+    list_display = ('name', 'summary', 'position', 'hash')
 
 class UserActivityAdmin(admin.ModelAdmin):
     list_display = ('user', 'last_activity_ip', 'last_activity_date')

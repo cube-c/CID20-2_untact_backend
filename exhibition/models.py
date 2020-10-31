@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, User
 from annoying.fields import AutoOneToOneField
 from datetime import datetime
+import hashlib
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=150, blank=True)
@@ -26,6 +27,7 @@ class Exhibit(models.Model):
     summary = models.TextField(max_length=121)
     info = models.TextField(max_length=487)
     position = models.OneToOneField(Position, on_delete=models.SET_NULL, null=True, blank=True)
+    hash = models.CharField(max_length=32, blank=True, editable=False)
 
     def __str__(self):
         return self.name
@@ -34,6 +36,7 @@ class Exhibit(models.Model):
         return {
             'name': self.name,
             'mesh': self.mesh.name,
+            'hash': self.hash,
             'summary': self.summary,
             'info': self.info,
             'position_id': self.position.position_id,
@@ -42,6 +45,17 @@ class Exhibit(models.Model):
             'posz': self.position.posz,
             'roty': self.position.roty,
         }
+    
+    def save(self, *args, **kwargs):
+        with self.mesh.open('rb') as file:
+            hash = hashlib.md5()
+            if file.multiple_chunks():
+                for chunk in file.chunks():
+                    hash.update(chunk)
+            else:
+                hash.update(file.read())
+            self.hash = hash.hexdigest()
+            super(Exhibit, self).save(*args, **kwargs)
 
 class UserActivity(models.Model):
     last_activity_ip = models.GenericIPAddressField()
