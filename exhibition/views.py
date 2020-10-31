@@ -35,6 +35,18 @@ def api_userStatus(request):
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
+def api_dndSwitch(request): #dndswitch 로 Boolean (True / False) 만 들어온다고 가정
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return HttpResponse(status=401)
+        dndswitch = request.POST.get('dndswitch')
+        requestUser = request.user
+        activity = UserActivity.objects.get(user = requestUser)
+        activity.dnd = dndswitch
+        activity.save()
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(['POST'])
+
 def api_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')

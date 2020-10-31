@@ -20,6 +20,7 @@ class LoginStatusMiddleware(object):
         try:
             activity = request.user.useractivity
         except:
+            print('user activity doesn\'t exist : make new activity')
             activity = UserActivity()
             activity.user = request.user
             activity.last_activity_date = datetime.datetime.now(datetime.timezone.utc)
