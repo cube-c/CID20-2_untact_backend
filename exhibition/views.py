@@ -68,7 +68,7 @@ def api_getMyInfo(request):
         u = request.user.id
         userTitle = UserWithTitle.objects.get(id=u).title
         userName = UserWithTitle.objects.get(id=u).username
-        info = [{'user_name' : userName, 'user_title' : userTitle}]
+        info = {'user_name' : userName, 'user_title' : userTitle}
         return JsonResponse(info, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
