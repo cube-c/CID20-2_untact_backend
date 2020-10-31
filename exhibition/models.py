@@ -18,10 +18,10 @@ class Position(models.Model):
         return self.position_id
     
 class Exhibit(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=38)
     mesh = models.FileField(upload_to='mesh/')
-    summary = models.TextField(max_length=200)
-    info = models.TextField(max_length=2000)
+    summary = models.TextField(max_length=121)
+    info = models.TextField(max_length=487)
     position = models.OneToOneField(Position, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
