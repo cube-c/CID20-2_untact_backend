@@ -4,7 +4,7 @@ from json import JSONDecodeError
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Exhibit, Position, UserWithTitle
+from .models import Exhibit, Position, UserWithTitle, UserActivity
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
