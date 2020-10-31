@@ -36,12 +36,13 @@ def api_userStatus(request):
         for status in status_list_full:
             tempUser = status['user_id']
             userTitle = UserWithTitle.objects.get(id=tempUser).title
+            userName = UserWithTitle.objects.get(id=tempUser).username
             if status['dnd'] == True:
-                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'dnd'})
+                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'dnd'})
             elif status['currLoginStatus'] == True:
-                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'activated'})
+                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'activated'})
             else:
-                status_list.append({'user_id' : tempUser, 'user_title' : userTitle, 'status' : 'inactivated'})
+                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'inactivated'})
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
