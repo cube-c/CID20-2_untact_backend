@@ -51,6 +51,8 @@ def api_signup(request):
         try:
             username = request.POST.get('username')
             password = request.POST.get('password')
+            if len(username) < 4 or len(username) > 16 or len(password) < 8 or len(password) > 128:
+                raise ValueError
             user = UserWithTitle.objects.create_user(username=username, password=password)
         except (ValueError, IntegrityError):
             return HttpResponseBadRequest()
