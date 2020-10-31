@@ -47,6 +47,11 @@ def api_dndSwitch(request): #dndswitch 로 Boolean (True / False) 만 들어온�
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
 
+def api_blank(request):
+    if request.method == 'GET':
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(['GET'])
+
 def api_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
