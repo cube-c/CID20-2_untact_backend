@@ -6,7 +6,7 @@ from datetime import datetime
 import hashlib
 
 class UserWithTitle(AbstractUser):
-    title = models.CharField(max_length=150, blank=True)
+    title = models.CharField(max_length=60, blank=True)
 
 class Position(models.Model):
     position_id = models.CharField(max_length=3, unique=True)
