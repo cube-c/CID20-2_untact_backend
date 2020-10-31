@@ -7,6 +7,8 @@ import hashlib
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
+    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
+    dnd = models.BooleanField(default = False) #Do not distrub
 
 class Position(models.Model):
     position_id = models.CharField(max_length=3, unique=True)

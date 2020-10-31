@@ -4,7 +4,7 @@ from exhibition.models import UserWithTitle, Position, Exhibit, UserActivity
 
 class UserWithTitleAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (('Additional Info', {'fields': ('title',),}),)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'title')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'title', 'last_activity_date', 'dnd')
 
 class PositionAdmin(admin.ModelAdmin):
     list_display = ('position_id', 'posx', 'posy', 'posz', 'roty')
