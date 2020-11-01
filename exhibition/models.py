@@ -5,10 +5,15 @@ from annoying.fields import AutoOneToOneField
 from datetime import datetime
 import hashlib
 
+class StatusType(models.TextChoices):
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+    DND = 'dnd'
+
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
     last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
-    dnd = models.BooleanField(default = False) #Do not distrub
+    status = models.CharField(max_length=7, choices = StatusType.choices, default = StatusType.OFFLINE)
 
 class Position(models.Model):
     position_id = models.CharField(max_length=3, unique=True)
@@ -24,7 +29,7 @@ class Position(models.Model):
         return self.position_id
     
 class Exhibit(models.Model):
-    name = models.CharField(max_length=38)
+    name = models.CharField(max_length=40)
     mesh = models.FileField(upload_to='mesh/')
     summary = models.TextField(max_length=121)
     info = models.TextField(max_length=487)
@@ -58,17 +63,3 @@ class Exhibit(models.Model):
                 hash.update(file.read())
             self.hash = hash.hexdigest()
             super(Exhibit, self).save(*args, **kwargs)
-
-class UserActivity(models.Model):
-    last_activity_ip = models.GenericIPAddressField()
-    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
-    user = AutoOneToOneField(settings.AUTH_USER_MODEL, primary_key = True, on_delete=models.CASCADE)
-    dnd = models.BooleanField(default = False) #Do not distrub
-
-    def date(self):
-        return {
-            'last_activity_ip' : self.last_activity_ip,
-            'last_activity_date' : self.last_activity_date,
-            'user' : self.user,
-            'dnd' : self.dnd,
-        }

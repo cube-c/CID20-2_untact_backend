@@ -4,7 +4,7 @@ from json import JSONDecodeError
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Exhibit, Position, UserWithTitle, UserActivity
+from .models import StatusType, UserWithTitle, Exhibit, Position
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -22,38 +22,30 @@ def api_exhibit(request):
 
 def api_userStatus(request):
     if request.method == 'GET':
-        status_lastActivityDate = [userActivity['last_activity_date'] for userActivity in UserActivity.objects.all().values()]
-        status_isActivated = []
-        for time in status_lastActivityDate:
-            if datetime.datetime.now(datetime.timezone.utc) - time > datetime.timedelta(seconds = 30):
-                status_isActivated.append({'currLoginStatus' : False})
-            else:
-                status_isActivated.append({'currLoginStatus' : True})
-        status_list_full = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
         status_list = []
-        for status in status_list_full:
-            tempUser = status['user_id']
-            userTitle = UserWithTitle.objects.get(id=tempUser).title
-            userName = UserWithTitle.objects.get(id=tempUser).username
-            if status['dnd'] == True:
-                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'dnd'})
-            elif status['currLoginStatus'] == True:
-                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'activated'})
-            else:
-                status_list.append({'user_name' : userName, 'user_title' : userTitle, 'status' : 'inactivated'})
+        for user in UserWithTitle.objects.all():
+            if user.is_superuser or user.id == request.user.id:
+                continue
+            if datetime.datetime.now(datetime.timezone.utc) - user.last_activity_date > datetime.timedelta(seconds = 20):
+                user.status = StatusType.OFFLINE
+                user.save()
+            status_list.append({'name' : user.username, 'title' : user.title, 'status' : user.status})
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
 @auth_func
-def api_dndSwitch(request): #dndswitch 로 Boolean (True / False) 만 들어온다고 가정
+def api_dndSwitch(request):
     if request.method == 'POST':
         if not request.user.is_authenticated:
             return HttpResponse(status=401)
         dndswitch = request.POST.get('dndswitch')
-        requestUser = request.user
-        activity = UserActivity.objects.get(user = requestUser)
-        activity.dnd = dndswitch
-        activity.save()
+        user_id = request.user.id
+        user = UserWithTitle.objects.get(id = user_id)
+        if dndswitch == "True":
+            user.status = StatusType.DND
+        else: # dndswitch == "False"
+            user.status = StatusType.ONLINE
+        user.save()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
 
@@ -62,7 +54,6 @@ def api_blank(request):
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['GET'])
 
-@auth_func
 def api_getMyInfo(request):
     if request.method == 'GET':
         u = request.user.id
@@ -96,6 +87,10 @@ def api_signup(request):
 @auth_func
 def api_logout(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        userLogout = UserWithTitle.objects.get(id = user_id)
+        userLogout.status = StatusType.OFFLINE
+        userLogout.save()
         logout(request)
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])

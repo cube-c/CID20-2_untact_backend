@@ -9,5 +9,7 @@ urlpatterns = [
     path('signup/', views.api_signup),
     path('exhibit/', views.api_exhibit),
     path('userStatus/', views.api_userStatus),
-    path('myInfo/', views.api_getMyInfo)
+    path('dndSwitch/', views.api_dndSwitch),
+    path('myInfo/', views.api_getMyInfo),
+    path('blank/', views.api_blank)
 ]
