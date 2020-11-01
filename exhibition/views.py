@@ -1,12 +1,10 @@
 import json
+import datetime
 from json import JSONDecodeError
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-import datetime
-from .models import Exhibit
-from .models import Position
-from .models import UserActivity
+from .models import StatusType, UserWithTitle, Exhibit, Position
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -15,7 +13,6 @@ def auth_func(func):
         return HttpResponse(status=401)
     return wrapper_function
 
-@auth_func
 def api_exhibit(request):
     if request.method == 'GET':
         exhibit_query = Exhibit.objects.filter(position_id__isnull=False).select_related('position')
@@ -23,18 +20,47 @@ def api_exhibit(request):
         return JsonResponse(exhibit_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
-@auth_func
 def api_userStatus(request):
     if request.method == 'GET':
-        status_lastActivityDate = [userActivity['last_activity_date'] for userActivity in UserActivity.objects.all().values()]
-        status_isActivated = []
-        for time in status_lastActivityDate:
-            if datetime.datetime.now(datetime.timezone.utc) - time > datetime.timedelta(seconds = 30):
-                status_isActivated.append({'currLoginStatus' : False})
-            else:
-                status_isActivated.append({'currLoginStatus' : False})
-        status_list = [{**userActivity, **currLoginStatus} for userActivity, currLoginStatus in zip(UserActivity.objects.values(), status_isActivated)]
+        status_list = []
+        for user in UserWithTitle.objects.all():
+            if user.is_superuser or user.id == request.user.id:
+                continue
+            if datetime.datetime.now(datetime.timezone.utc) - user.last_activity_date > datetime.timedelta(seconds = 20):
+                user.status = StatusType.OFFLINE
+                user.save()
+            status_list.append({'name' : user.username, 'title' : user.title, 'status' : user.status})
         return JsonResponse(status_list, safe=False)
+    return HttpResponseNotAllowed(['GET'])
+
+@auth_func
+def api_dndSwitch(request):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return HttpResponse(status=401)
+        dndswitch = request.POST.get('dndswitch')
+        user_id = request.user.id
+        user = UserWithTitle.objects.get(id = user_id)
+        if dndswitch == "True":
+            user.status = StatusType.DND
+        else: # dndswitch == "False"
+            user.status = StatusType.ONLINE
+        user.save()
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(['POST'])
+
+def api_blank(request):
+    if request.method == 'GET':
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(['GET'])
+
+def api_getMyInfo(request):
+    if request.method == 'GET':
+        u = request.user.id
+        userTitle = UserWithTitle.objects.get(id=u).title
+        userName = UserWithTitle.objects.get(id=u).username
+        info = {'user_name' : userName, 'user_title' : userTitle}
+        return JsonResponse(info, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
 def api_login(request):
@@ -48,9 +74,25 @@ def api_login(request):
         return HttpResponse(status=401)
     return HttpResponseNotAllowed(['POST'])
 
+def api_signup(request):
+    if request.method == 'POST':
+        try:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            if len(username) < 4 or len(username) > 16 or len(password) < 8 or len(password) > 128 or not username.isalnum():
+                raise ValueError
+            user = UserWithTitle.objects.create_user(username=username, password=password)
+        except (ValueError, IntegrityError):
+            return HttpResponseBadRequest()
+        return HttpResponse(status=201)
+
 @auth_func
 def api_logout(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        userLogout = UserWithTitle.objects.get(id = user_id)
+        userLogout.status = StatusType.OFFLINE
+        userLogout.save()
         logout(request)
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
