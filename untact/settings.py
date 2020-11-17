@@ -34,7 +34,8 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'exhibition.UserWithTitle'
 
 INSTALLED_APPS = [
-    'annoying',
+    'channels',
+    'message',
     'exhibition.apps.ExhibitionConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -74,7 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'untact.wsgi.application'
-
+ASGI_APPLICATION = 'untact.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

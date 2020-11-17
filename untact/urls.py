@@ -27,6 +27,7 @@ def protected_serve(request, path, document_root=None):
     return HttpResponse(status=401)
 
 urlpatterns = [
+    path('message/', include('message.urls')),
     path('api/', include('exhibition.urls')),
     path('admin/', admin.site.urls),
     url(r'^media/(?P<path>.*)$', protected_serve, {
