@@ -2,24 +2,37 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Rooms</title>
+    <title>Message Room</title>
 </head>
 <body>
-    What room would you like to enter?<br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
-
+    <textarea id="log" cols="100" rows="20"></textarea><br>
+    <input id="username" type="text" size="100"><br>
+    <input id="invite" type="button" value="Invite">
     <script>
-        document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#room-name-submit').click();
-            }
+        const socket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/message/'
+        );
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.querySelector('#log').value += (data.host + ' invited ' + data.guest + '\n');
         };
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/message/' + roomName + '/';
+        socket.onclose = function(e) {
+            console.error('Socket closed unexpectedly');
+        };
+
+        document.querySelector('#username').focus();
+
+        document.querySelector('#invite').onclick = function(e) {
+            const usernameDom = document.querySelector('#username');
+            const username = usernameDom.value;
+            socket.send(JSON.stringify({
+                'username': username 
+            }));
+            username.value = '';
         };
     </script>
 </body>
