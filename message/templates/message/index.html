@@ -5,9 +5,11 @@
     <title>Message Room</title>
 </head>
 <body>
-    <textarea id="log" cols="100" rows="20"></textarea><br>
+    <textarea readonly id="log" cols="100" rows="20"></textarea><br>
     <input id="username" type="text" size="100"><br>
     <input id="invite" type="button" value="Invite">
+    <input id="accept" type="button" value="Accept">
+    <input id="reject" type="button" value="Reject">
     <script>
         const socket = new WebSocket(
             'ws://'
@@ -17,11 +19,19 @@
 
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#log').value += (data.host + ' invited ' + data.guest + '\n');
+            if(data.status) {
+                var date = new Date(data.info.timestamp * 1000);
+                document.querySelector('#log').value += (data.info.host + ' invited ' + 
+                    data.info.guest + ' on ' + date.toString() + '\n');
+            }
+            else {
+                document.querySelector('#log').value += (data.info + '\n');
+            }
         };
 
         socket.onclose = function(e) {
-            console.error('Socket closed unexpectedly');
+            document.querySelector('#log').value += 'Socket closed\n'
+            console.error('Socket closed');
         };
 
         document.querySelector('#username').focus();

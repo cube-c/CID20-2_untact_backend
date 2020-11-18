@@ -14,7 +14,7 @@ class ExhibitAdmin(admin.ModelAdmin):
     list_display = ('name', 'summary', 'position', 'hash')
 
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ('host', 'guest', 'time')
+    list_display = ('host', 'guest', 'invited_on')
 
 # Register your models here.
 admin.site.register(UserWithTitle, UserWithTitleAdmin)
