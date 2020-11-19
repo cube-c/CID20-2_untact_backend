@@ -77,7 +77,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def invite_user(self, host, guest, invited_on):
-        invitation, _ = Invitation.objects.get_or_create(host=host, guest=guest, defaults={"invited_on": invited_on})
+        invitation, _ = Invitation.objects.update_or_create(host=host, guest=guest, defaults={"invited_on": invited_on})
         return invitation
     
     @database_sync_to_async
