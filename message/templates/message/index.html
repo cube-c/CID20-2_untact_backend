@@ -5,11 +5,14 @@
     <title>Message Room</title>
 </head>
 <body>
-    <textarea readonly id="log" cols="100" rows="20"></textarea><br>
+    {{ username }} <br>
+    <textarea readonly id="state" cols="100" rows="20"></textarea><br>
+    <input readonly id="log" type="text" size="100"><br>
     <input id="username" type="text" size="100"><br>
     <input id="invite" type="button" value="Invite">
     <input id="accept" type="button" value="Accept">
     <input id="reject" type="button" value="Reject">
+    <input id="leave" type="button" value="Leave">
     <script>
         const socket = new WebSocket(
             'ws://'
@@ -19,18 +22,25 @@
 
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            if(data.status) {
-                var date = new Date(data.info.timestamp * 1000);
-                document.querySelector('#log').value += (data.info.host + ' invited ' + 
-                    data.info.guest + ' on ' + date.toString() + '\n');
+            if(data.type == "state") {
+                if(data.channel_id) {
+                    document.querySelector('#state').value = 'Group : ' + data.channel_id + '\n';
+                }
+                else {
+                    document.querySelector('#state').value = 'Group : None\n';
+                }
+                data.invitations.forEach(invitation => {
+                    var date = new Date(invitation.timestamp * 1000);
+                    document.querySelector('#state').value += (invitation.username + ' | ' + date.toString() + '\n');
+                });
             }
             else {
-                document.querySelector('#log').value += (data.info + '\n');
+                document.querySelector('#log').value = data.type + " | " + data.info;
             }
         };
 
         socket.onclose = function(e) {
-            document.querySelector('#log').value += 'Socket closed\n'
+            document.querySelector('#log').value = 'Socket closed\n'
             console.error('Socket closed');
         };
 
@@ -40,9 +50,33 @@
             const usernameDom = document.querySelector('#username');
             const username = usernameDom.value;
             socket.send(JSON.stringify({
+                'type': 'invite',
                 'username': username 
             }));
-            username.value = '';
+        };
+
+        document.querySelector('#accept').onclick = function(e) {
+            const usernameDom = document.querySelector('#username');
+            const username = usernameDom.value;
+            socket.send(JSON.stringify({
+                'type': 'accept',
+                'username': username 
+            }));
+        };
+
+        document.querySelector('#reject').onclick = function(e) {
+            const usernameDom = document.querySelector('#username');
+            const username = usernameDom.value;
+            socket.send(JSON.stringify({
+                'type': 'reject',
+                'username': username 
+            }));
+        };
+
+        document.querySelector('#leave').onclick = function(e) {
+            socket.send(JSON.stringify({
+                'type': 'leave'
+            }));
         };
     </script>
 </body>
