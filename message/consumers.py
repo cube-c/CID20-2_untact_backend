@@ -14,7 +14,6 @@ from .models import Invitation
 class MessageConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
-
         if self.user.is_anonymous:
             await self.close()
         else:
@@ -25,7 +24,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.send_state({})
 
     async def disconnect(self, close_code):
-        pass
+        consumers = await self.leave_all()
+        await self.send_state_consumers(consumers)
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -154,3 +154,12 @@ class MessageConsumer(AsyncWebsocketConsumer):
             self.user.save()
             return True, consumers_invitation
         return False, [] 
+    
+    @database_sync_to_async
+    def leave_all(self):
+        invitations = Invitation.objects.filter(host=self.user)
+        consumers_invitation = list(invitations.values_list("guest__consumer", flat=True))
+        invitations.delete()
+        self.user.channel_id = ''
+        self.user.save()
+        return consumers_invitation

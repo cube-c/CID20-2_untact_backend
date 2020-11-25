@@ -35,7 +35,7 @@ AUTH_USER_MODEL = 'exhibition.UserWithTitle'
 
 INSTALLED_APPS = [
     'channels',
-    'message',
+    'message.apps.MessageConfig',
     'exhibition.apps.ExhibitionConfig',
     'django.contrib.admin',
     'django.contrib.auth',
