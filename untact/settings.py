@@ -53,7 +53,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'untact.updateActivityMiddleware.UpdateActivityMiddleware',
 ]
 
 ROOT_URLCONF = 'untact.urls'

@@ -28,9 +28,6 @@ def api_userStatus(request):
         for user in UserWithTitle.objects.all():
             if user.is_superuser or user.id == request.user.id:
                 continue
-            if datetime.datetime.now(datetime.timezone.utc) - user.last_activity_date > datetime.timedelta(seconds = 20):
-                user.status = StatusType.OFFLINE
-                user.save()
             status_list.append({'name' : user.username, 'title' : user.title, 'status' : user.status})
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
@@ -43,19 +40,14 @@ def api_dndSwitch(request):
         dndswitch = request.POST.get('dndswitch')
         user_id = request.user.id
         user = UserWithTitle.objects.get(id = user_id)
-        if dndswitch == "True":
-            user.status = StatusType.DND
-        else: # dndswitch == "False"
-            user.status = StatusType.ONLINE
-        user.save()
+        if user.status != StatusType.OFFLINE:
+            if dndswitch == "True":
+                user.status = StatusType.DND
+            else: # dndswitch == "False"
+                user.status = StatusType.ONLINE
+            user.save()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
-
-@auth_func
-def api_blank(request):
-    if request.method == 'GET':
-        return HttpResponse(status=204)
-    return HttpResponseNotAllowed(['GET'])
 
 @auth_func
 def api_getMyInfo(request):

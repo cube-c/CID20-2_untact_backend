@@ -11,7 +11,6 @@ class StatusType(models.TextChoices):
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
-    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
     status = models.CharField(max_length=7, choices = StatusType.choices, default = StatusType.OFFLINE)
     channel_id = models.CharField(max_length=32, blank=True)
     consumer = models.CharField(max_length=96, blank=True)
