@@ -8,6 +8,7 @@ from channels.auth import login
 from channels.db import database_sync_to_async
 from exhibition.models import UserWithTitle as User
 from django.db import transaction
+from django.conf import settings
 from .models import Invitation
 
 class MessageConsumer(AsyncWebsocketConsumer):
@@ -42,9 +43,9 @@ class MessageConsumer(AsyncWebsocketConsumer):
             if other == self.user:
                 await self.send(text_data=json.dumps({"type": "fail", "info": "You cannot send to yourself."}))
             elif other:
+                current_time = datetime.datetime.now(datetime.timezone.utc)
                 if call == "invite":
-                    invited_on = datetime.datetime.now(datetime.timezone.utc)
-                    status, consumers = await self.invite_user(self.user, other, invited_on)
+                    status, consumers = await self.invite_user(self.user, other, current_time)
                     await self.send_state_consumers(consumers)
                     if status:
                         await self.send(text_data=json.dumps({"type": "success",
@@ -53,7 +54,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                         await self.send(text_data=json.dumps({"type": "fail",
                                         "info": "Request is invalid"}))
                 elif call == "accept":
-                    status, consumers = await self.accept_user(other, self.user)
+                    status, consumers = await self.accept_user(other, self.user, current_time)
                     await self.send_state_consumers(consumers)
                     if status:
                         await self.send(text_data=json.dumps({"type": "success", 
@@ -109,10 +110,10 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 for invitation in Invitation.objects.filter(guest=self.user)]
     
     @database_sync_to_async
-    def invite_user(self, host, guest, invited_on):
+    def invite_user(self, host, guest, current_time):
         if host.channel_id and host.channel_id == guest.channel_id:
             return False, []
-        Invitation.objects.update_or_create(host=host, guest=guest, defaults={"invited_on": invited_on})
+        Invitation.objects.update_or_create(host=host, guest=guest, defaults={"invited_on": current_time})
         if not host.channel_id:
             host.channel_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(32))
             host.save()
@@ -120,14 +121,18 @@ class MessageConsumer(AsyncWebsocketConsumer):
         return True, [guest.consumer]
 
     @database_sync_to_async
-    def accept_user(self, host, guest):
+    def accept_user(self, host, guest, current_time):
         invitation = Invitation.objects.filter(host=host, guest=guest)
         if invitation.exists() and not guest.channel_id:
-            with transaction.atomic():
-                Invitation.objects.filter(host__channel_id=host.channel_id, guest=guest).delete()
-                guest.channel_id = host.channel_id
-                guest.save()
-            return True, [guest.consumer]
+            if (current_time - invitation[0].invited_on).total_seconds() < settings.TIMEOUT:
+                with transaction.atomic():
+                    Invitation.objects.filter(host__channel_id=host.channel_id, guest=guest).delete()
+                    guest.channel_id = host.channel_id
+                    guest.save()
+                return True, [guest.consumer]
+            else:
+                invitation.delete()
+                return False, []
         return False, []
     
     @database_sync_to_async
