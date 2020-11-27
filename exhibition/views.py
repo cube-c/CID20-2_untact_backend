@@ -61,9 +61,9 @@ def api_blank(request):
 def api_getMyInfo(request):
     if request.method == 'GET':
         u = request.user.id
-        userTitle = UserWithTitle.objects.get(id=u).title
         userName = UserWithTitle.objects.get(id=u).username
-        info = {'user_name' : userName, 'user_title' : userTitle}
+        userTitle = UserWithTitle.objects.get(id=u).title
+        info = {'user_name' : userName, 'user_title' : userTitle, 'cookie' : request.headers['Cookie']}
         return JsonResponse(info, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
