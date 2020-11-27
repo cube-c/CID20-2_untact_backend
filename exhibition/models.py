@@ -4,15 +4,10 @@ from django.contrib.auth.models import AbstractUser, User
 from datetime import datetime
 import hashlib
 
-class StatusType(models.TextChoices):
-    ONLINE = 'online'
-    OFFLINE = 'offline'
-    DND = 'dnd'
-
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
-    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
-    status = models.CharField(max_length=7, choices = StatusType.choices, default = StatusType.OFFLINE)
+    is_online = models.BooleanField(default=False)
+    is_dnd = models.BooleanField(default=False)
     channel_id = models.CharField(max_length=32, blank=True)
     consumer = models.CharField(max_length=96, blank=True)
 

@@ -21,6 +21,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
             if prev_consumer:
                 await self.channel_layer.send(prev_consumer, {"type": "send_close"})
             await self.accept()
+            await self.enter()
             await self.send_state({})
 
     async def disconnect(self, close_code):
@@ -107,8 +108,10 @@ class MessageConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def get_invitations(self):
-        return [{"username": invitation.host.username, "timestamp": time.mktime(invitation.invited_on.timetuple())}
-                for invitation in Invitation.objects.filter(guest=self.user)]
+        return sorted([{"name": invitation.host.username, "title": invitation.host.title,
+                        "timestamp": time.mktime(invitation.invited_on.timetuple())}
+                        for invitation in Invitation.objects.filter(guest=self.user)],
+                        key=lambda k: k["timestamp"], reverse=True)
     
     @database_sync_to_async
     def invite_user(self, host, guest, current_time):
@@ -157,10 +160,17 @@ class MessageConsumer(AsyncWebsocketConsumer):
         return False, [] 
     
     @database_sync_to_async
+    def enter(self):
+        self.user.is_online = True
+        self.user.save()
+
+    @database_sync_to_async
     def leave_all(self):
         invitations = Invitation.objects.filter(host=self.user)
         consumers_invitation = list(invitations.values_list("guest__consumer", flat=True))
         invitations.delete()
-        self.user.channel_id = ''
+        self.user.channel_id = ""
+        self.user.consumer = ""
+        self.user.is_online = False 
         self.user.save()
         return consumers_invitation

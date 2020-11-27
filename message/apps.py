@@ -6,4 +6,4 @@ class MessageConfig(AppConfig):
         from .models import Invitation
         from exhibition.models import UserWithTitle as User
         Invitation.objects.all().delete()
-        User.objects.all().update(channel_id="", consumer="")
+        User.objects.all().update(channel_id="", consumer="", is_online=False)
