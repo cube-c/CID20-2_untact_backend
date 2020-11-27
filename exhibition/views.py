@@ -4,7 +4,9 @@ from json import JSONDecodeError
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import StatusType, UserWithTitle, Exhibit, Position
+from django.db import transaction
+from .models import UserWithTitle, Exhibit, Position
+from message.models import Invitation
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -26,25 +28,32 @@ def api_userStatus(request):
     if request.method == 'GET':
         status_list = []
         for user in UserWithTitle.objects.all():
-            if user.is_superuser or user.id == request.user.id:
-                continue
-            status_list.append({'name' : user.username, 'title' : user.title, 'status' : user.status})
+            #if user.is_superuser or user.id == request.user.id:
+            #    continue
+            status = ''
+            if user.is_online:
+                if user.is_dnd:
+                    status = 'dnd'
+                else:
+                    status = 'online'
+            else:
+                status = 'offline'
+            status_list.append({'name' : user.username, 'title' : user.title, 'status' : status})
         return JsonResponse(status_list, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
 @auth_func
 def api_dndSwitch(request):
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return HttpResponse(status=401)
         dndswitch = request.POST.get('dndswitch')
         user_id = request.user.id
         user = UserWithTitle.objects.get(id = user_id)
-        if user.status != StatusType.OFFLINE:
+        with transaction.atomic():
             if dndswitch == "True":
-                user.status = StatusType.DND
-            else: # dndswitch == "False"
-                user.status = StatusType.ONLINE
+                Invitation.objects.filter(host=user).delete()
+                user.is_dnd = True
+            else:
+                user.is_dnd = False
             user.save()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
@@ -85,10 +94,6 @@ def api_signup(request):
 @auth_func
 def api_logout(request):
     if request.method == 'POST':
-        user_id = request.user.id
-        userLogout = UserWithTitle.objects.get(id = user_id)
-        userLogout.status = StatusType.OFFLINE
-        userLogout.save()
         logout(request)
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])

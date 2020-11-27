@@ -7,7 +7,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.auth import login
 from channels.db import database_sync_to_async
 from exhibition.models import UserWithTitle as User
-from exhibition.models import StatusType
 from django.db import transaction
 from django.conf import settings
 from .models import Invitation
@@ -22,8 +21,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
             if prev_consumer:
                 await self.channel_layer.send(prev_consumer, {"type": "send_close"})
             await self.accept()
-            await self.send_state({})
             await self.enter()
+            await self.send_state({})
 
     async def disconnect(self, close_code):
         if not self.user.is_anonymous:
@@ -160,7 +159,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def enter(self):
-        self.user.status = StatusType.ONLINE
+        self.user.is_online = True
         self.user.save()
 
     @database_sync_to_async
@@ -170,6 +169,6 @@ class MessageConsumer(AsyncWebsocketConsumer):
         invitations.delete()
         self.user.channel_id = ""
         self.user.consumer = ""
-        self.user.status = StatusType.OFFLINE
+        self.user.is_online = False 
         self.user.save()
         return consumers_invitation
