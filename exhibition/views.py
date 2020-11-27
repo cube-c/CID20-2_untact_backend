@@ -48,13 +48,8 @@ def api_dndSwitch(request):
         dndswitch = request.POST.get('dndswitch')
         user_id = request.user.id
         user = UserWithTitle.objects.get(id = user_id)
-        with transaction.atomic():
-            if dndswitch == "True":
-                Invitation.objects.filter(host=user).delete()
-                user.is_dnd = True
-            else:
-                user.is_dnd = False
-            user.save()
+        user.is_dnd = (dndswitch == "True")
+        user.save()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
 
