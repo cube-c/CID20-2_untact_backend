@@ -26,8 +26,9 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.enter()
 
     async def disconnect(self, close_code):
-        consumers = await self.leave_all()
-        await self.send_state_consumers(consumers)
+        if not self.user.is_anonymous:
+            consumers = await self.leave_all()
+            await self.send_state_consumers(consumers)
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
