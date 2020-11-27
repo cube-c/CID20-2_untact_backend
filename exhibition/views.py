@@ -28,8 +28,8 @@ def api_userStatus(request):
     if request.method == 'GET':
         status_list = []
         for user in UserWithTitle.objects.all():
-            #if user.is_superuser or user.id == request.user.id:
-            #    continue
+            if user.is_superuser or user.id == request.user.id:
+                continue
             status = ''
             if user.is_online:
                 if user.is_dnd:
