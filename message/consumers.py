@@ -108,8 +108,10 @@ class MessageConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def get_invitations(self):
-        return [{"username": invitation.host.username, "timestamp": time.mktime(invitation.invited_on.timetuple())}
-                for invitation in Invitation.objects.filter(guest=self.user)]
+        return sorted([{"name": invitation.host.username, "title": invitation.host.title,
+                        "timestamp": time.mktime(invitation.invited_on.timetuple())}
+                        for invitation in Invitation.objects.filter(guest=self.user)],
+                        key=lambda k: k["timestamp"], reverse=True)
     
     @database_sync_to_async
     def invite_user(self, host, guest, current_time):

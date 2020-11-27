@@ -13,6 +13,7 @@
     <input id="accept" type="button" value="Accept">
     <input id="reject" type="button" value="Reject">
     <input id="leave" type="button" value="Leave">
+    <input id="dnd" type="button" value="DND">
     <script>
         const socket = new WebSocket(
             'ws://'
@@ -31,7 +32,7 @@
                 }
                 data.invitations.forEach(invitation => {
                     var date = new Date(invitation.timestamp * 1000);
-                    document.querySelector('#state').value += (invitation.username + ' | ' + date.toString() + '\n');
+                    document.querySelector('#state').value += (invitation.name + ' | ' + date.toString() + '\n');
                 });
             }
             else {
@@ -76,6 +77,15 @@
         document.querySelector('#leave').onclick = function(e) {
             socket.send(JSON.stringify({
                 'type': 'leave'
+            }));
+        };
+
+        document.querySelector('#dnd').onclick = function(e) {
+            const usernameDom = document.querySelector('#username');
+            const username = usernameDom.value;
+            socket.send(JSON.stringify({
+                'type': 'dnd',
+                'username': username 
             }));
         };
     </script>
