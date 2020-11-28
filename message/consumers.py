@@ -112,11 +112,11 @@ class MessageConsumer(AsyncWebsocketConsumer):
 
     async def send_sent_invitations_state(self, event):
         sent_invitations = await self.get_sent_invitations()
-        await self.send(text_data=json.dumps({"type": "sent_invitations_state", "sent_invitations": sent_invitations}))
+        await self.send(text_data=json.dumps({"type": "sent_invitations_state", "invitations": sent_invitations}))
 
     async def send_received_invitations_state(self, event):
         received_invitations = await self.get_received_invitations()
-        await self.send(text_data=json.dumps({"type": "received_invitations_state", "received_invitations": received_invitations}))
+        await self.send(text_data=json.dumps({"type": "received_invitations_state", "invitations": received_invitations}))
 
     async def send_channel_id_state(self, event):
         await self.send(text_data=json.dumps({"type": "channel_id_state", "channel_id": self.user.channel_id}))
