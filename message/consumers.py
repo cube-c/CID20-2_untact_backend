@@ -24,6 +24,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.enter()
             await self.send_sent_invitations_state({})
             await self.send_received_invitations_state({})
+            await self.send_channel_id_state({})
 
     async def disconnect(self, close_code):
         if not self.user.is_anonymous:
@@ -79,8 +80,19 @@ class MessageConsumer(AsyncWebsocketConsumer):
                     await self.send_received_invitations_state_consumers(receiver_consumers)
                     if status:
                         await self.send(text_data=json.dumps({"type": "success", 
-                                        "info": "You rejected the invite of {}.".format(username)}))
+                                        "info": "You rejected the invitation of {}.".format(username)}))
                         await self.send_message_consumers(sender_consumers, self.user, "rejected you")
+                    else:
+                        await self.send(text_data=json.dumps({"type": "fail",
+                                        "info": "Request is invalid"}))
+                elif call == "cancel":
+                    status, sender_consumers, receiver_consumers = await self.reject_user(self.user, other)
+                    await self.send_sent_invitations_state_consumers(sender_consumers)
+                    await self.send_received_invitations_state_consumers(receiver_consumers)
+                    if status:
+                        await self.send(text_data=json.dumps({"type": "success", 
+                                        "info": "You canceled the invitation."}))
+                        await self.send_message_consumers(sender_consumers, other, "canceled")
                     else:
                         await self.send(text_data=json.dumps({"type": "fail",
                                         "info": "Request is invalid"}))
@@ -148,6 +160,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                         "timestamp": time.mktime(invitation.invited_on.timetuple())}
                         for invitation in Invitation.objects.filter(host=self.user)],
                         key=lambda k: k["timestamp"], reverse=True)
+
     @database_sync_to_async
     def get_received_invitations(self):
         return sorted([{"name": invitation.host.username, "title": invitation.host.title,
@@ -169,15 +182,11 @@ class MessageConsumer(AsyncWebsocketConsumer):
     def accept_user(self, host, guest, current_time):
         invitation = Invitation.objects.filter(host=host, guest=guest)
         if invitation.exists() and not guest.channel_id:
-            if (current_time - invitation[0].invited_on).total_seconds() < settings.TIMEOUT:
-                with transaction.atomic():
-                    Invitation.objects.filter(host__channel_id=host.channel_id, guest=guest).delete()
-                    guest.channel_id = host.channel_id
-                    guest.save()
-                return True, [host.consumer], [guest.consumer]
-            else:
-                invitation.delete()
-                return False, [host.consumer], [guest.consumer]
+            with transaction.atomic():
+                Invitation.objects.filter(host__channel_id=host.channel_id, guest=guest).delete()
+                guest.channel_id = host.channel_id
+                guest.save()
+            return True, [host.consumer], [guest.consumer]
         return False, [], []
     
     @database_sync_to_async

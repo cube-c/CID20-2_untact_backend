@@ -6,12 +6,15 @@
 </head>
 <body>
     {{ username }} <br>
-    <textarea readonly id="state" cols="100" rows="20"></textarea><br>
+    <textarea readonly id="sent" cols="100" rows="10"></textarea><br>
+    <textarea readonly id="received" cols="100" rows="10"></textarea><br>
+    <input readonly id="group" type="text" size="100"></textarea><br>
     <input readonly id="log" type="text" size="100"><br>
     <input id="username" type="text" size="100"><br>
     <input id="invite" type="button" value="Invite">
     <input id="accept" type="button" value="Accept">
     <input id="reject" type="button" value="Reject">
+    <input id="cancel" type="button" value="Cancel">
     <input id="leave" type="button" value="Leave">
     <input id="dnd" type="button" value="DND">
     <script>
@@ -23,17 +26,22 @@
 
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            if(data.type == "state") {
-                if(data.channel_id) {
-                    document.querySelector('#state').value = 'Group : ' + data.channel_id + '\n';
-                }
-                else {
-                    document.querySelector('#state').value = 'Group : None\n';
-                }
+            if(data.type == "sent_invitations_state") {
+                document.querySelector('#sent').value = ''; 
                 data.invitations.forEach(invitation => {
                     var date = new Date(invitation.timestamp * 1000);
-                    document.querySelector('#state').value += (invitation.name + ' | ' + date.toString() + '\n');
+                    document.querySelector('#sent').value += (invitation.name + ' | ' + date.toString() + '\n');
                 });
+            }
+            else if(data.type == "received_invitations_state") {
+                document.querySelector('#received').value = ''; 
+                data.invitations.forEach(invitation => {
+                    var date = new Date(invitation.timestamp * 1000);
+                    document.querySelector('#received').value += (invitation.name + ' | ' + date.toString() + '\n');
+                });
+            }
+            else if(data.type == "channel_id_state") {
+                document.querySelector('#group').value = 'Group : ' + data.channel_id + '\n';
             }
             else {
                 document.querySelector('#log').value = data.type + " | " + data.info;
@@ -74,6 +82,15 @@
             }));
         };
 
+        document.querySelector('#cancel').onclick = function(e) {
+            const usernameDom = document.querySelector('#username');
+            const username = usernameDom.value;
+            socket.send(JSON.stringify({
+                'type': 'cancel',
+                'username': username 
+            }));
+        };
+
         document.querySelector('#leave').onclick = function(e) {
             socket.send(JSON.stringify({
                 'type': 'leave'
@@ -85,7 +102,7 @@
             const username = usernameDom.value;
             socket.send(JSON.stringify({
                 'type': 'dnd',
-                'username': username 
+                'value': (username ? true : false)
             }));
         };
     </script>
