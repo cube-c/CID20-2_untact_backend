@@ -2,7 +2,11 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
 from datetime import datetime
+from untact.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_SIGNATURE_VERSION, AWS_S3_REGION_NAME
 import hashlib
+import boto3
+from botocore.client import Config
+from botocore.exceptions import ClientError
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
@@ -36,9 +40,16 @@ class Exhibit(models.Model):
         return self.name
     
     def data(self):
+        try:
+            client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                config=Config(signature_version=AWS_S3_SIGNATURE_VERSION, region_name=AWS_S3_REGION_NAME))
+            response = client.generate_presigned_url('get_object',
+                Params={'Bucket': 'untact-museum', 'Key': self.mesh.name}, ExpiresIn=3600)
+        except ClientError:
+            response = ""
         return {
             'name': self.name,
-            'mesh': self.mesh.name,
+            'mesh': response,
             'hash': self.hash,
             'summary': self.summary,
             'info': self.info,
