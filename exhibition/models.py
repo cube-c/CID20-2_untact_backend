@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
+from django.core.validators import FileExtensionValidator
 from datetime import datetime
 from untact.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_SIGNATURE_VERSION, AWS_S3_REGION_NAME
 import hashlib
@@ -30,7 +31,7 @@ class Position(models.Model):
     
 class Exhibit(models.Model):
     name = models.CharField(max_length=40)
-    mesh = models.FileField(upload_to='mesh/')
+    mesh = models.FileField(upload_to='mesh/', validators=[FileExtensionValidator(['glb', 'gltf'])])
     summary = models.TextField(max_length=121)
     info = models.TextField(max_length=487)
     position = models.OneToOneField(Position, on_delete=models.SET_NULL, null=True, blank=True)
