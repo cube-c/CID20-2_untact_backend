@@ -68,10 +68,8 @@ def api_dndSwitch(request):
 def api_getMyInfo(request):
     if request.method == 'GET':
         uid = request.user.id
-        user = UserWithTitle.objects.get(id=u)
-        name = user.name
-        title = user.title
-        info = {'uid': uid, 'name' : name, 'title' : title, 'cookie' : request.headers['Cookie']}
+        user = UserWithTitle.objects.get(id=uid)
+        info = {'uid': uid, 'name' : user.username, 'title' : user.title, 'cookie' : request.headers['Cookie']}
         return JsonResponse(info, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
