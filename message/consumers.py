@@ -24,7 +24,6 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.enter()
             await self.send_sent_invitations_state({})
             await self.send_received_invitations_state({})
-            await self.send_channel_id_state({})
 
     async def disconnect(self, close_code):
         if not self.user.is_anonymous:
