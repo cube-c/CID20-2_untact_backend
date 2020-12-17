@@ -18,11 +18,14 @@
     <input id="leave" type="button" value="Leave">
     <input id="dnd" type="button" value="DND">
     <script>
+        const ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
         const socket = new WebSocket(
-            'wss://'
+            ws_scheme + '://'
             + window.location.host
             + '/ws/message/'
         );
+        
+        document.querySelector('#group').value = 'Group : \n';
 
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
@@ -43,7 +46,7 @@
             else if(data.type == "channel_id_state") {
                 document.querySelector('#group').value = 'Group : ' + data.channel_id + '\n';
             }
-            else {
+            else if(data.type != "message") {
                 document.querySelector('#log').value = data.type + " | " + data.info;
             }
         };
