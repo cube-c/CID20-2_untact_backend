@@ -174,7 +174,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         Invitation.objects.update_or_create(host=host, guest=guest, defaults={"invited_on": current_time})
         if not host.channel_id:
             host.channel_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(32))
-            host.save()
+            host.save(update_fields=["channel_id"])
         return True, [host.consumer], [guest.consumer], "invite_success"
 
     @database_sync_to_async
@@ -188,7 +188,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                     return False, [], [], "channel_is_full"
                 Invitation.objects.filter(host__channel_id=host.channel_id, guest=guest).delete()
                 guest.channel_id = host.channel_id
-                guest.save()
+                guest.save(update_fields=["channel_id"])
             return True, [host.consumer], [guest.consumer], "{}".format(host.username)
         return False, [], [], "invitation_not_exist"
     
