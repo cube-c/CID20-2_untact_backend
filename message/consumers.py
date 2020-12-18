@@ -18,6 +18,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.close()
         else:
             prev_consumer = await self.update_consumer()
+            print(prev_consumer, self.channel_name)
             if prev_consumer:
                 await self.channel_layer.send(prev_consumer, {"type": "send_close"})
             await self.accept()
