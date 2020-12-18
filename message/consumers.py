@@ -175,7 +175,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
     def invite_user(self, host, guest, current_time):
         if host.channel_id and host.channel_id == guest.channel_id:
             return False, [], [], "invite_same_channel_fail"
-        if guest.is_dnd == True
+        if guest.is_dnd == True:
             return False, [], [], "invite_dnd_fail"
         Invitation.objects.update_or_create(host=host, guest=guest, defaults={"invited_on": current_time})
         if not host.channel_id:
