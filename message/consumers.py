@@ -18,7 +18,6 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.close()
         else:
             prev_consumer = await self.update_consumer()
-            print(prev_consumer, self.channel_name)
             if prev_consumer:
                 await self.channel_layer.send(prev_consumer, {"type": "send_close"})
             await self.accept()
@@ -222,7 +221,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         consumers_invitation = list(invitations.values_list("guest__consumer", flat=True))
         invitations.delete()
         self.user.channel_id = ""
-        self.user.consumer = ""
+        # self.user.consumer = ""
         self.user.is_online = False 
         self.user.save()
         return consumers_invitation
