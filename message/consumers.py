@@ -22,6 +22,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
             await self.channel_layer.group_send(self.user.username, {"type": "send_close", "without": self.channel_name})
+            await self.update_consumer()
             await self.accept()
             await self.enter()
             await self.send_sent_invitations_state({})
@@ -142,6 +143,11 @@ class MessageConsumer(AsyncWebsocketConsumer):
     async def send_close(self, event):
         if event["without"] != self.channel_name:
             await self.close()
+
+    @database_sync_to_async
+    def update_consumer(self):
+        self.user.consumer = self.channel_name
+        self.user.save()
 
     @database_sync_to_async
     def get_user(self, username):
