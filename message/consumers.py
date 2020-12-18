@@ -142,7 +142,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
 
     async def send_close(self, event):
         if event["without"] != self.channel_name:
-            await self.close()
+            await self.close(code=4444)
 
     @database_sync_to_async
     def update_consumer(self):
