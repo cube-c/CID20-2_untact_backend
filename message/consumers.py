@@ -34,8 +34,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 self.user.username,
                 self.channel_name
             )
-            print(close_code)
-            if close_code != 4444:
+            if close_code != 1006:
                 receiver_consumers = await self.leave_all()
                 await self.send_received_invitations_state_consumers(receiver_consumers)
 
@@ -144,7 +143,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
 
     async def send_close(self, event):
         if event["without"] != self.channel_name:
-            await self.close(code=4444)
+            await self.close(code=1006)
 
     @database_sync_to_async
     def update_consumer(self):
