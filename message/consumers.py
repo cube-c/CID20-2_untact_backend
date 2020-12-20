@@ -34,8 +34,9 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 self.user.username,
                 self.channel_name
             )
-            receiver_consumers = await self.leave_all()
-            await self.send_received_invitations_state_consumers(receiver_consumers)
+            if close_code != 4444:
+                receiver_consumers = await self.leave_all()
+                await self.send_received_invitations_state_consumers(receiver_consumers)
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
