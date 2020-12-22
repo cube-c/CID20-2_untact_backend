@@ -1,19 +1,20 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
-from annoying.fields import AutoOneToOneField
+from django.core.validators import FileExtensionValidator
 from datetime import datetime
+from untact.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_SIGNATURE_VERSION, AWS_S3_REGION_NAME
 import hashlib
-
-class StatusType(models.TextChoices):
-    ONLINE = 'online'
-    OFFLINE = 'offline'
-    DND = 'dnd'
+import boto3
+from botocore.client import Config
+from botocore.exceptions import ClientError
 
 class UserWithTitle(AbstractUser):
     title = models.CharField(max_length=60, blank=True)
-    last_activity_date = models.DateTimeField(default = datetime(1950,1,1))
-    status = models.CharField(max_length=7, choices = StatusType.choices, default = StatusType.OFFLINE)
+    is_online = models.BooleanField(default=False)
+    is_dnd = models.BooleanField(default=False)
+    channel_id = models.CharField(max_length=32, blank=True)
+    consumer = models.CharField(max_length=96, blank=True)
 
 class Position(models.Model):
     position_id = models.CharField(max_length=3, unique=True)
@@ -30,7 +31,7 @@ class Position(models.Model):
     
 class Exhibit(models.Model):
     name = models.CharField(max_length=40)
-    mesh = models.FileField(upload_to='mesh/')
+    mesh = models.FileField(upload_to='mesh/', validators=[FileExtensionValidator(['glb', 'gltf'])])
     summary = models.TextField(max_length=121)
     info = models.TextField(max_length=487)
     position = models.OneToOneField(Position, on_delete=models.SET_NULL, null=True, blank=True)
@@ -40,9 +41,16 @@ class Exhibit(models.Model):
         return self.name
     
     def data(self):
+        try:
+            client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                config=Config(signature_version=AWS_S3_SIGNATURE_VERSION, region_name=AWS_S3_REGION_NAME))
+            response = client.generate_presigned_url('get_object',
+                Params={'Bucket': 'untact-museum', 'Key': self.mesh.name}, ExpiresIn=3600)
+        except ClientError:
+            response = ""
         return {
             'name': self.name,
-            'mesh': self.mesh.name,
+            'mesh': response,
             'hash': self.hash,
             'summary': self.summary,
             'info': self.info,

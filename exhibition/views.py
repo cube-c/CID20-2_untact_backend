@@ -2,9 +2,11 @@ import json
 import datetime
 from json import JSONDecodeError
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseNotFound, JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import StatusType, UserWithTitle, Exhibit, Position
+from django.db import transaction
+from .models import UserWithTitle, Exhibit, Position
+from message.models import Invitation
 
 def auth_func(func):
     def wrapper_function(*args, **kwargs):
@@ -28,42 +30,46 @@ def api_userStatus(request):
         for user in UserWithTitle.objects.all():
             if user.is_superuser or user.id == request.user.id:
                 continue
-            if datetime.datetime.now(datetime.timezone.utc) - user.last_activity_date > datetime.timedelta(seconds = 20):
-                user.status = StatusType.OFFLINE
-                user.save()
-            status_list.append({'name' : user.username, 'title' : user.title, 'status' : user.status})
+            status = ''
+            if user.is_online:
+                if user.is_dnd:
+                    status = 'dnd'
+                else:
+                    status = 'online'
+            else:
+                status = 'offline'
+            status_list.append({'uid': user.id, 'name': user.username, 'title': user.title, 'status': status})
         return JsonResponse(status_list, safe=False)
+    return HttpResponseNotAllowed(['GET'])
+
+@auth_func
+def api_userStatus_uid(request, uid):
+    if request.method == 'GET':
+        try:
+            user = UserWithTitle.objects.get(id=uid)
+            info = {'uid': uid, 'name' : user.username, 'title' : user.title}
+            return JsonResponse(info, safe=False)
+        except UserWithTitle.DoesNotExist:
+            return HttpResponseNotFound()
     return HttpResponseNotAllowed(['GET'])
 
 @auth_func
 def api_dndSwitch(request):
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return HttpResponse(status=401)
         dndswitch = request.POST.get('dndswitch')
         user_id = request.user.id
         user = UserWithTitle.objects.get(id = user_id)
-        if dndswitch == "True":
-            user.status = StatusType.DND
-        else: # dndswitch == "False"
-            user.status = StatusType.ONLINE
+        user.is_dnd = (dndswitch == "True")
         user.save()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
 
 @auth_func
-def api_blank(request):
-    if request.method == 'GET':
-        return HttpResponse(status=204)
-    return HttpResponseNotAllowed(['GET'])
-
-@auth_func
 def api_getMyInfo(request):
     if request.method == 'GET':
-        u = request.user.id
-        userTitle = UserWithTitle.objects.get(id=u).title
-        userName = UserWithTitle.objects.get(id=u).username
-        info = {'user_name' : userName, 'user_title' : userTitle}
+        uid = request.user.id
+        user = UserWithTitle.objects.get(id=uid)
+        info = {'uid': uid, 'name' : user.username, 'title' : user.title, 'cookie' : request.headers['Cookie']}
         return JsonResponse(info, safe=False)
     return HttpResponseNotAllowed(['GET'])
 
@@ -93,10 +99,6 @@ def api_signup(request):
 @auth_func
 def api_logout(request):
     if request.method == 'POST':
-        user_id = request.user.id
-        userLogout = UserWithTitle.objects.get(id = user_id)
-        userLogout.status = StatusType.OFFLINE
-        userLogout.save()
         logout(request)
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(['POST'])
